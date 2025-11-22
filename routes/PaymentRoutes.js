@@ -1,9 +1,17 @@
-
 const express = require('express');
 const router = express.Router();
-const { processPayment } = require('./paymentController');
-const { protect } = require('./middleware/authMiddleware'); 
 
-router.post('/payments/process', protect, processPayment); 
+// Controllers
+const { processPayment } = require('../controllers/paymentController');
+
+// Middleware
+const { protect } = require('../middleware/authMiddleware');
+
+/**
+ * @route   POST /api/payments/process
+ * @desc    Process a payment
+ * @access  Private (Authenticated users only)
+ */
+router.post('/process', protect, processPayment);
 
 module.exports = router;

@@ -1,6 +1,7 @@
 
 
-const Appointment = require('../models/Appointment'); 
+const Appointment = require('../models/Appointment');
+
 const mockCreateSecureRoom = (appointmentId, userId) => {
     return {
         roomId: `room-${appointmentId}`,
@@ -11,22 +12,28 @@ const mockCreateSecureRoom = (appointmentId, userId) => {
 
 const startConsultation = async (req, res) => {
     const { appointmentId } = req.params;
-    const userId = req.user ? req.user.id : 'MOCK_USER_ID'; 
+    const userId = req.user ? req.user.id : null;
+
+    if (!userId) {
+        return res.status(401).json({ success: false, message: 'Authentication required.' });
+    }
 
     try {
         const appointment = await Appointment.findById(appointmentId).populate('doctor patient');
-        
+
         if (!appointment) {
-            return res.status(404).json({ message: 'Appointment not found.' });
+            return res.status(404).json({ success: false, message: 'Appointment not found.' });
         }
 
-        const isParticipant = appointment.doctor._id.toString() === userId || appointment.patient._id.toString() === userId;
+        const isParticipant =
+            appointment.doctor._id.toString() === userId ||
+            appointment.patient._id.toString() === userId;
+
         if (!isParticipant) {
-            return res.status(403).json({ message: 'Not authorized to start this consultation.' });
+            return res.status(403).json({ success: false, message: 'Not authorized to start this consultation.' });
         }
-        
-        
-        const videoRoomDetails = mockCreateSecureRoom(appointmentId, userId); 
+
+        const videoRoomDetails = mockCreateSecureRoom(appointmentId, userId);
 
         appointment.status = 'active';
         await appointment.save();
@@ -36,27 +43,29 @@ const startConsultation = async (req, res) => {
             message: 'Consultation session ready. Join link provided.',
             videoRoom: videoRoomDetails,
         });
-
     } catch (error) {
         console.error('Error starting consultation:', error);
-        res.status(500).json({ message: 'Server error while initiating consultation.' });
+        res.status(500).json({ success: false, message: 'Server error while initiating consultation.' });
     }
 };
 
 const endConsultation = async (req, res) => {
     const { appointmentId } = req.params;
-    const doctorId = req.user ? req.user.id : 'MOCK_DOCTOR_ID'; 
+    const doctorId = req.user ? req.user.id : null;
+
+    if (!doctorId) {
+        return res.status(401).json({ success: false, message: 'Authentication required.' });
+    }
 
     try {
-
         const appointment = await Appointment.findById(appointmentId);
-        
+
         if (!appointment) {
-            return res.status(404).json({ message: 'Appointment not found.' });
+            return res.status(404).json({ success: false, message: 'Appointment not found.' });
         }
-        
+
         if (appointment.doctor.toString() !== doctorId) {
-            return res.status(403).json({ message: 'Only the consulting doctor can end this session.' });
+            return res.status(403).json({ success: false, message: 'Only the consulting doctor can end this session.' });
         }
 
         appointment.status = 'completed';
@@ -66,31 +75,33 @@ const endConsultation = async (req, res) => {
         res.status(200).json({
             success: true,
             message: 'Consultation completed and closed.',
-            appointment: appointment,
+            appointment,
         });
-
     } catch (error) {
         console.error('Error ending consultation:', error);
-        res.status(500).json({ message: 'Server error while ending consultation.' });
+        res.status(500).json({ success: false, message: 'Server error while ending consultation.' });
     }
 };
 
-
 const getChatSetup = async (req, res) => {
     const { appointmentId } = req.params;
-    
+
     try {
-        
-        res.status(200).json({ 
+        // Optional: validate appointment exists
+        const appointment = await Appointment.findById(appointmentId);
+        if (!appointment) {
+            return res.status(404).json({ success: false, message: 'Appointment not found.' });
+        }
+
+        res.status(200).json({
             success: true,
             message: 'Real-time chat initiated.',
-            chatProtocol: 'Socket.IO', 
-            features: ['Real-time text messaging', 'Multimedia file sharing support']
+            chatProtocol: 'Socket.IO',
+            features: ['Real-time text messaging', 'Multimedia file sharing support'],
         });
-        
     } catch (error) {
-        console.error('Error fetching chat history:', error);
-        res.status(500).json({ message: 'Server error while setting up chat.' });
+        console.error('Error setting up chat:', error);
+        res.status(500).json({ success: false, message: 'Server error while setting up chat.' });
     }
 };
 

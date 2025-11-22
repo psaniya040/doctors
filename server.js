@@ -1,4 +1,4 @@
- const express = require('express');
+const express = require('express');
 const app = express();
 const PORT = 5600;
 
@@ -14,13 +14,14 @@ app.get('/api/users', (req, res) => {
     res.json(users);
 });
 
+require('dotenv').config();
+const mongoose = require('mongoose');
+
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
   console.log('Press Ctrl+C to stop the server.');
 });
 
-require('dotenv').config();
-const mongoose = require('mongoose');
 
 const connectDB = async () => {
   try {

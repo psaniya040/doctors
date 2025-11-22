@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<userProfile>
+  <id>U001</id>
+  <name>Jane Doe</name>
+  <email>jane.doe@example.com</email>
+  <role>Patient</role>
+
+  <profilePicture>
+    <fileName>profile_pic.png</fileName>
+    <fileType>image/png</fileType>
+    <filePath>images/profile_pic.png</filePath>
+    <uploadedOn>2025-11-22</uploadedOn>
+  </profilePicture>
+
+  <preferences>
+    <theme>light</theme>
+    <notifications>true</notifications>
+  </preferences>
+
+  <contactInfo>
+    <phone>+91-9876543210</phone>
+    <address>
+      <street>123 Park Street</street>
+      <city>Kolkata</city>
+      <state>West Bengal</state>
+      <postalCode>700016</postalCode>
+      <country>India</country>
+    </address>
+  </contactInfo>
+
+  <accountStatus>
+    <active>true</active>
+    <lastLogin>2025-11-20T10:30:00</lastLogin>
+  </accountStatus>
+</userProfile>

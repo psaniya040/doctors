@@ -1,8 +1,8 @@
 
-ConstAppointmentModel = require('../models/AppointmentModel');
+const AppointmentModel = require('../models/AppointmentModel');
 const DoctorModel = require('../models/DoctorModel');
 const NotificationService = require('../services/NotificationService');
-const { validateAppointmentData } = require('../utils/validation');
+const validateAppointmentData = require('../utils/validation');
 
 exports.getDoctorAvailability = async (req, res) => {
     try {
@@ -24,7 +24,7 @@ exports.getDoctorAvailability = async (req, res) => {
         });
 
     } catch (error) {
-        console.error(Errorfetchingavailabilityfordoctor$(req.params.doctorId), error);
+        console.error(`Error fetching availability for doctor ${req.params.doctorId}:`, error);
         res.status(500).json({
             success: false,
             message: "Failed to retrieve doctor availability."
@@ -43,6 +43,7 @@ exports.scheduleAppointment = async (req, res) => {
     if (!patientId) {
         return res.status(401).json({ success: false, message: "Authentication required to book an appointment." });
     }
+
     const validationErrors = validateAppointmentData(appointmentData);
     if (validationErrors) {
         return res.status(400).json({ success: false, message: validationErrors });
@@ -63,6 +64,7 @@ exports.scheduleAppointment = async (req, res) => {
 
         await NotificationService.sendAppointmentConfirmation(newAppointment.id, patientId, appointmentData.doctorId);
         await NotificationService.scheduleReminder(newAppointment.id, appointmentData.startTime, patientId);
+
         res.status(201).json({
             success: true,
             message: "Appointment successfully scheduled.",
@@ -78,6 +80,7 @@ exports.scheduleAppointment = async (req, res) => {
     }
 };
 
+
 exports.cancelAppointment = async (req, res) => {
     const { appointmentId } = req.params;
     const userId = req.user ? req.user.id : null;
@@ -88,7 +91,6 @@ exports.cancelAppointment = async (req, res) => {
     }
 
     try {
-
         const appointment = await AppointmentModel.findById(appointmentId);
 
         if (!appointment) {
@@ -100,7 +102,8 @@ exports.cancelAppointment = async (req, res) => {
             return res.status(403).json({ success: false, message: "Not authorized to cancel this appointment." });
         }
 
-        if (new Date(appointment.startTime) < new Date(Date.now() + 2 * 3600 * 1000)) {
+        const timeDiff = new Date(appointment.startTime) - Date.now();
+        if (timeDiff < 2 * 3600 * 1000) {
             return res.status(400).json({ success: false, message: "Cancellation not allowed within 2 hours of the appointment time." });
         }
 
@@ -111,8 +114,7 @@ exports.cancelAppointment = async (req, res) => {
         res.status(200).json({ success: true, message: "Appointment successfully cancelled." });
 
     } catch (error) {
-    
-        console.error(Errorcancellingappointment$(appointmentId), error);
+        console.error(`Error cancelling appointment ${appointmentId}:`, error);
         res.status(500).json({ success: false, message: "Failed to cancel appointment." });
     }
 };
@@ -136,7 +138,7 @@ exports.getAppointments = async (req, res) => {
         });
 
     } catch (error) {
-        console.error(Errorretrievingappointmentsforuser$(userId), error);
+        console.error(`Error retrieving appointments for user ${userId}:`, error);
         res.status(500).json({ success: false, message: "Failed to retrieve appointments." });
     }
 };

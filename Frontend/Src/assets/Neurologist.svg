@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" 
+     width="64" height="64" 
+     viewBox="0 0 64 64" 
+     fill="none" stroke="currentColor" stroke-width="2">
+
+  <!-- Head outline -->
+  <path d="M32 2c-10 0-18 8-18 18v8c0 6-4 10-8 14v6c0 8 6 14 14 14h26c8 0 14-6 14-14v-6c-4-4-8-8-8-14v-8c0-10-8-18-18-18z" 
+        fill="#f0f0f0" stroke="#333"/>
+
+  <!-- Brain curves -->
+  <circle cx="28" cy="24" r="4" fill="#ff6f61"/>
+  <circle cx="36" cy="24" r="4" fill="#ff6f61"/>
+  <circle cx="32" cy="30" r="4" fill="#ff6f61"/>
+</svg>

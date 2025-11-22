@@ -3,22 +3,20 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const PatientModel = require('../models/PatientModel');
 const DoctorModel = require('../models/DoctorModel'); 
-const { validateRegistrationData, validateLoginData } = require('../utils/validation');
+const { validateRegistrationData, validateLoginData } = require('../utils/validation');  // ✅ fixed import
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_default_jwt_secret';
 const TOKEN_EXPIRY = '1h';
-
 
 exports.registerPatient = async (req, res) => {
     const registrationData = req.body;
     const validationErrors = validateRegistrationData(registrationData);
     
     if (validationErrors) {
-        return res.status(400).json({ success: false, message: validationErrors });
+        return res.status(400).json({ success: false, message: "Validation failed.", errors: validationErrors });
     }
 
     try {
-        
         const existingUser = await PatientModel.findByEmail(registrationData.email);
         if (existingUser) {
             return res.status(409).json({ success: false, message: "A user with this email already exists." });
@@ -62,20 +60,13 @@ exports.login = async (req, res) => {
     const validationErrors = validateLoginData(req.body);
 
     if (validationErrors) {
-        return res.status(400).json({ success: false, message: validationErrors });
+        return res.status(400).json({ success: false, message: "Validation failed.", errors: validationErrors });
     }
 
     try {
-        let userModel, user;
-        
-        if (role === 'doctor') {
-            userModel = DoctorModel;
-        } else {
-            userModel = PatientModel; 
-        }
+        const userModel = role === 'doctor' ? DoctorModel : PatientModel;
+        const user = await userModel.findByEmail(email);
 
-
-        user = await userModel.findByEmail(email);
         if (!user) {
             return res.status(401).json({ success: false, message: "Invalid credentials (User not found)." });
         }
@@ -108,11 +99,15 @@ exports.login = async (req, res) => {
 
 
 exports.updateProfile = async (req, res) => {
+    if (!req.user) {
+        return res.status(401).json({ success: false, message: "Authentication required." });
+    }
+
     const userId = req.user.userId; 
     const role = req.user.role;
-    const updates = req.body;
+    const updates = { ...req.body };
 
-
+    // Prevent sensitive fields from being updated
     delete updates.email;
     delete updates.password;
     delete updates.role;
@@ -127,7 +122,6 @@ exports.updateProfile = async (req, res) => {
             return res.status(403).json({ success: false, message: "Unauthorized role for profile update." });
         }
 
-        
         const updatedUser = await userModel.update(userId, updates);
 
         if (!updatedUser) {

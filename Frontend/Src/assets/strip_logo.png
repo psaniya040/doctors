@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<asset>
+  <id>logo001</id>
+  <name>Stripe Logo</name>
+  <type>image</type>
+  <format>png</format>
+  <fileName>strip_logo.png</fileName>
+  <filePath>images/strip_logo.png</filePath>
+  <usage>
+    <context>Payment Gateway Integration</context>
+    <display>Header, Checkout Page</display>
+  </usage>
+  <copyright>
+    <owner>Stripe, Inc.</owner>
+    <url>https://stripe.com/brand</url>
+  </copyright>
+</asset>

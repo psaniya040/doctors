@@ -1,10 +1,9 @@
 
-const Patient = require('../models/Patient'); 
-const jwt = require('jsonwebtoken'); 
-const bcrypt = require('bcryptjs'); 
+const Patient = require('../models/Patient');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your_default_secret'; 
-
+const JWT_SECRET = process.env.JWT_SECRET || 'your_default_secret';
 
 exports.registerPatient = async (req, res) => {
     try {
@@ -12,7 +11,7 @@ exports.registerPatient = async (req, res) => {
 
         let patient = await Patient.findOne({ email });
         if (patient) {
-            return res.status(400).json({ message: 'Patient with this email already exists.' });
+            return res.status(400).json({ success: false, message: 'Patient with this email already exists.' });
         }
 
         const salt = await bcrypt.genSalt(10);
@@ -22,9 +21,8 @@ exports.registerPatient = async (req, res) => {
             name,
             email,
             phone,
-            password: hashedPassword 
+            password: hashedPassword
         });
-
 
         const token = jwt.sign({ id: patient._id }, JWT_SECRET, { expiresIn: '1d' });
 
@@ -37,15 +35,19 @@ exports.registerPatient = async (req, res) => {
 
     } catch (error) {
         console.error('Registration error:', error);
-        res.status(500).json({ message: 'Server error during registration.' });
+        res.status(500).json({ success: false, message: 'Server error during registration.' });
     }
 };
 
 exports.updateProfile = async (req, res) => {
     try {
-        const patientId = req.user.id;
-        const { personalDetails, medicalHistory, allergies, medications, insuranceInfo } = req.body;
-        
+        const patientId = req.user ? req.user.id : null;
+        if (!patientId) {
+            return res.status(401).json({ success: false, message: 'Authentication required.' });
+        }
+
+        const { personalDetails = {}, medicalHistory, allergies, medications, insuranceInfo } = req.body;
+
         const updateFields = {
             ...personalDetails,
             medicalHistory,
@@ -54,14 +56,14 @@ exports.updateProfile = async (req, res) => {
             insuranceInfo
         };
 
-        const patient = await Patient.findByIdAndUpdate(patientId, updateFields, { 
-            new: true, 
+        const patient = await Patient.findByIdAndUpdate(patientId, updateFields, {
+            new: true,
             runValidators: true,
-            select: '-password' 
+            select: '-password'
         });
 
         if (!patient) {
-            return res.status(404).json({ message: 'Patient not found.' });
+            return res.status(404).json({ success: false, message: 'Patient not found.' });
         }
 
         res.status(200).json({
@@ -72,25 +74,31 @@ exports.updateProfile = async (req, res) => {
 
     } catch (error) {
         console.error('Profile update error:', error);
-        res.status(500).json({ message: 'Server error during profile update.' });
+        res.status(500).json({ success: false, message: 'Server error during profile update.' });
     }
 };
 
-
 exports.uploadDocument = async (req, res) => {
     try {
-        const patientId = req.user.id;
-        const fileData = req.file;
+        const patientId = req.user ? req.user.id : null;
+        if (!patientId) {
+            return res.status(401).json({ success: false, message: 'Authentication required.' });
+        }
 
+        const fileData = req.file;
         if (!fileData) {
-             return res.status(400).json({ message: 'No file uploaded.' });
+            return res.status(400).json({ success: false, message: 'No file uploaded.' });
         }
 
         const updatedPatient = await Patient.findByIdAndUpdate(
             patientId,
-            { $push: { documents: { name: fileData.originalname, url: fileData.path } } }, 
+            { $push: { documents: { name: fileData.originalname, url: fileData.path } } },
             { new: true, select: 'documents' }
         );
+
+        if (!updatedPatient) {
+            return res.status(404).json({ success: false, message: 'Patient not found.' });
+        }
 
         res.status(200).json({
             success: true,
@@ -100,6 +108,6 @@ exports.uploadDocument = async (req, res) => {
 
     } catch (error) {
         console.error('Document upload error:', error);
-        res.status(500).json({ message: 'Server error during document upload.' });
+        res.status(500).json({ success: false, message: 'Server error during document upload.' });
     }
 };

@@ -1,0 +1,11 @@
+<userProfile>
+  <id>12345</id>
+  <name>John Doe</name>
+  <email>johndoe@example.com</email>
+  <role>Patient</role>
+  <profilePicture>
+    <fileName>profile_pic.png</fileName>
+    <fileType>image/png</fileType>
+    <filePath>images/profile_pic.png</filePath>
+  </profilePicture>
+</userProfile>
